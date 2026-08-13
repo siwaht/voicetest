@@ -1,0 +1,77 @@
+The Meridian Office Chronicles
+
+PART 1: THE COMPANY
+
+Meridian Analytics is a mid-sized software company headquartered on the 14th floor of the Ashford Tower in Portland, Oregon. The company was founded in March 2016 by two former data engineers, Priya Raman and Daniel Okoye, after they left a large consulting firm. Meridian builds forecasting software for grocery retailers, and its flagship product is called PulseGrid.
+
+As of this year, Meridian employs 84 people across four departments: Engineering, Data Science, Customer Success, and Operations. The office runs on a hybrid schedule, with Tuesday and Thursday designated as required in-office days. Everyone gets a $600 annual home-office stipend and unlimited paid time off, though the handbook recommends a minimum of 15 days per year.
+
+PART 2: THE PEOPLE
+
+Priya Raman is the Chief Executive Officer. She still writes code on Friday afternoons, a habit she calls "keeping my hands dirty." She drinks exactly two cups of black coffee a day and is famous for ending every all-hands meeting with the phrase, "Ship something you'd be proud to explain."
+
+Daniel Okoye is the Chief Technology Officer. He owns the architecture decisions and runs a weekly session called Deep Dive Wednesday, where any engineer can present a technical problem for 20 minutes. Daniel is allergic to shellfish, which is why the office never orders from the seafood place on the corner.
+
+Sarah Whitfield leads Engineering. She manages three teams: Platform, Ingest, and Frontend. Sarah joined Meridian in 2019 as the seventh employee and was promoted to Director of Engineering in 2022. She keeps a rubber duck named Gordon on her desk and insists it has caught more bugs than any linter.
+
+Marcus Delgado is the Principal Data Scientist. He built the original demand-forecasting model that became PulseGrid's core engine. Marcus is the one who discovered that the model's accuracy dropped every year in late November, which turned out to be a Thanksgiving demand spike the training data had never seen.
+
+Lisa Chen runs Customer Success. Her team handles 31 enterprise accounts, and she personally manages the three largest: Harvest Foods, BlueCart Grocers, and Nordwell Markets. Lisa's rule is that no customer email goes unanswered for more than four business hours.
+
+Tobias Ferrand is the Operations Manager. He controls the office thermostat, the snack budget, and the conference room calendar, which makes him arguably the most powerful person in the building. Tobias set the thermostat to 71 degrees and refuses to negotiate.
+
+PART 3: THE OFFICE ITSELF
+
+The 14th floor has four conference rooms, each named after a river: Willamette, Deschutes, Rogue, and Umpqua. Willamette is the largest and seats 18 people. Rogue is the smallest, seats four, and has a broken projector that has been "on the list" since last spring.
+
+The kitchen has two coffee machines. The good one, a burr-grinder espresso machine, sits on the left. The bad one, a decade-old drip brewer, sits on the right and is used only when the good one is being cleaned. There is an ongoing, mostly friendly dispute about whose turn it is to descale the espresso machine.
+
+The office printer is named Bartholomew. It jams roughly twice a week, almost always on the third page of a multi-page document. Tobias has requested a replacement three times. Finance has declined three times.
+
+PART 4: THE INCIDENT
+
+On a Tuesday in February, PulseGrid went down for 47 minutes during the morning batch run. The outage started at 6:12 AM Pacific and was resolved at 6:59 AM.
+
+The root cause was a schema change. An engineer on the Ingest team had renamed a database column from unit_price to unit_price_cents without updating the downstream forecasting job. The job failed silently for the first 12 minutes because the error handler swallowed the exception and logged it at DEBUG level, which nobody was watching.
+
+Marcus noticed the problem first when his morning accuracy dashboard showed zero rows. He paged Daniel at 6:24 AM. Sarah joined at 6:31 AM and found the offending migration in the deploy log within four minutes. The fix was a rollback, deployed at 6:54 AM, and the batch run was restarted manually.
+
+Two customers noticed: Harvest Foods and BlueCart Grocers. Lisa called both before 8:00 AM, which she later said was the single most useful thing anyone did that morning.
+
+The retrospective, held in Willamette that Thursday, produced three action items. First, all error handlers in the ingest pipeline must log at ERROR level and emit a metric. Second, schema migrations now require a second reviewer from the consuming team. Third, the morning batch run gets an automated freshness alert that fires if zero rows are written by 6:20 AM.
+
+Priya's only comment in the retrospective was that nobody should be blamed for the outage, but everyone should be embarrassed by the DEBUG log line. That phrase became an internal running joke.
+
+PART 5: THE OFFSITE
+
+Every year in September, Meridian holds a two-day offsite at a lodge in Hood River, about an hour east of Portland. Attendance is optional but roughly 90 percent of the company shows up.
+
+The first day is working sessions. The second day is deliberately unstructured, with hiking, kayaking on the Columbia River, and a long dinner. The traditional closing event is a trivia contest written by Tobias, who takes it far too seriously and has never once revealed the answer key.
+
+Last year's trivia champion was an intern named Ruth Almeida, who had been at the company for eleven weeks and beat both founders. She won a trophy shaped like a rubber duck, in honor of Gordon, and a $250 gift card. Ruth received a full-time offer the following month and accepted it.
+
+PART 6: THE LUNCH TRADITION
+
+Every Thursday, whoever is in the office walks four blocks to a small restaurant called The Copper Fork. The table is always the long one at the back, reserved under the name Meridian.
+
+Sarah orders the grilled salmon with roasted vegetables, every single time, without looking at the menu. Marcus orders the double burger with extra fries and claims he is "carb-loading for the afternoon standup." Lisa orders the pasta primavera and always shares the bread basket. Daniel orders anything except the shellfish, usually the roasted chicken. Priya orders whatever the special is, on principle.
+
+The bill goes on the company card, capped at $25 per person, and Tobias reviews it every month with the resigned expression of a man who knows the cap is routinely ignored.
+
+PART 7: HOW WORK GETS DONE
+
+Meridian runs two-week sprints that start on Wednesday, not Monday, because Priya believes Monday planning meetings are a waste of a good morning. Sprint demos happen on the second Tuesday at 3:00 PM in Willamette.
+
+Code review requires one approval for routine changes and two for anything touching the forecasting engine or the billing system. The team uses a rule called the twenty-minute rule: if you are stuck for more than twenty minutes, you must ask someone. Sarah introduced it after watching a junior engineer spend two days on a misconfigured environment variable.
+
+Deploys are allowed any day except Friday. The exception is a hotfix, which requires approval from either Sarah or Daniel. There is a physical wooden token on Sarah's desk, painted red, that the person currently deploying keeps at their workstation. Whoever holds the red token owns production.
+
+Documentation lives in a wiki that everyone agrees is out of date. Twice a year, the company holds a Docs Day, where all feature work stops and everyone fixes documentation. It is unpopular and effective.
+
+PART 8: THE QUARTER
+
+In the most recent quarter, Meridian closed 9 new enterprise deals, bringing annual recurring revenue to $11.4 million. Customer churn was 2 accounts, both small, both lost to price. The Engineering team shipped 214 pull requests and reduced average batch-run time from 38 minutes to 22 minutes.
+
+The biggest win was Nordwell Markets, a 340-store chain that signed a three-year contract in the final week of the quarter after an eight-month evaluation. Lisa led the account, Marcus built the custom accuracy report that closed it, and Daniel personally answered 40 pages of security questionnaire.
+
+The company celebrated with a Friday afternoon party in the kitchen. Tobias bought the good cake, not the sheet cake from the grocery store, which everyone noticed and nobody mentioned out loud.
