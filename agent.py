@@ -71,17 +71,20 @@ retriever_agent = CompiledSubAgent(
 
 memory = InMemorySaver()
 store = InMemoryStore()
+MEMORY_FILE = '/memories/AGENTS.md'
 
 backend = CompositeBackend(
     default=StateBackend(),
     routes={
-        "/memories/":StoreBackend(namespace= lambda _rt: ("use_one",)),
+        "/memories/":StoreBackend(namespace= lambda _rt: ("use_one",),store=store),
         "/files/": FilesystemBackend(root_dir='./files/',virtual_mode=True),
         "/skills/": FilesystemBackend(root_dir='./skills/',virtual_mode=True)
     }
 )
 
-
+#  seed
+if backend.download_files([MEMORY_FILE])[0].error == "file_not_found":
+    backend.upload_files([(MEMORY_FILE, b"# User Memory\n\n(nothing recorded yet)\n")])
 
 def create_graph():
     # NOTE: a checkpointer IS used here, so every graph call must supply a
@@ -91,11 +94,12 @@ def create_graph():
     return create_deep_agent(
         # model="openai:gpt-4.1-mini",
         model=model,
-        system_prompt="Use retriever_agent subagent to answer questions about the loaded document.",
+        system_prompt="""Use retriever_agent subagent to answer questions about the loaded document.
+        Persist durable facts about the user to {MEMORY_FILE}.""",
         tools=[get_weather],
         checkpointer=memory,
         store=store,
-        memory=['/memories/AGENTS.md'],
+        memory=[MEMORY_FILE],
         backend=backend,
         skills=["/skills/"],
         subagents=[retriever_agent],
