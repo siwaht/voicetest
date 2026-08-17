@@ -32,8 +32,17 @@ vectorstore = InMemoryVectorStore.from_documents(chunks, embedding)
 retriever = vectorstore.as_retriever()
 
 @tool
-def search_document(query:str)-> str:
-    """return relavant passage from the loaded document."""
+def search_document(query: str) -> str:
+    """Search the loaded office document and return the passages that match.
+
+    The document is "The Meridian Office Chronicles", covering Meridian
+    Analytics: company facts and policies, staff names and their roles, the
+    office layout with its rooms and equipment, and the postmortem of a
+    PulseGrid outage.
+
+    Pass a natural-language query. Returns the matching passages verbatim,
+    separated by blank lines.
+    """
     found = retriever.invoke(query)
     return "\n\n".join(doc.page_content for doc in found)
 

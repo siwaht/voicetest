@@ -1,5 +1,11 @@
 from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 import os
+
+# This module reads os.environ at import time, and it gets imported before the
+# load_dotenv() calls in raga.py / agent.py run. So load .env here rather than
+# relying on an importer to have done it first.
+load_dotenv()
 
 #####################################################
 # Cloudflare Workers AI — OpenAI-compatible endpoint.

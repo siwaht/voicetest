@@ -44,7 +44,15 @@ model = model
 
 retriever_agent = CompiledSubAgent(
     name="retriever agent",
-    description="Specilized agent for retrieving documents",
+    description=(
+        "Answers questions about the loaded office document, The Meridian "
+        "Office Chronicles. It covers Meridian Analytics: company facts and "
+        "policies such as the hybrid schedule and stipends, staff names and "
+        "roles, the office layout with its conference rooms and equipment, "
+        "and the postmortem of a PulseGrid outage. Use this for any question "
+        "about the company, its people, the office, or that incident. It "
+        "searches the document and answers only from passages it retrieves."
+    ),
     runnable=sub_agent_retriever
 )
 ########################################################################
@@ -58,7 +66,7 @@ backend = CompositeBackend(
     default=StateBackend(),
     routes={
         "/memories/":StoreBackend(namespace= lambda _rt: ("use_one",),store=store),
-        "/files/": FilesystemBackend(root_dir='./files/',virtual_mode=True),
+        "/skills/": FilesystemBackend(root_dir='./skills/',virtual_mode=True),
         "/memories/": FilesystemBackend(root_dir='./memories/',virtual_mode=True)
     }
 )
