@@ -17,7 +17,9 @@ from deepagents.backends import StateBackend, StoreBackend, FilesystemBackend, C
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from tools.get_weather import get_weather
-from tools.search_document import search_document
+from raga import sub_agent_retriever
+from llm_config import model
+
 
 from livekit import agents
 from livekit.agents import (
@@ -37,29 +39,8 @@ load_dotenv()
 
 # model = init_chat_model('openai:gpt-4')
 
-#########################################################
-ACCOUNT_ID = os.environ["CLOUDFLARE_ACCOUNT_ID"]
-API_TOKEN  = os.environ["CLOUDFLARE_API_TOKEN"]
+model = model
 
-# --- 1. Model -------------------------------------------------------------
-model = ChatOpenAI(
-    model="@cf/zai-org/glm-5.2",          # Workers AI model id
-    base_url=f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1",
-    api_key=API_TOKEN,
-    temperature=0,
-)
-
-
-###########################################################
-
-sub_agent_retriever = create_agent(
-    model=model,
-    tools=[search_document],
-    system_prompt=(
-        "You answer questions about the loaded document. "
-        "Always use search_document to ground your answers."
-    ),
-)
 
 retriever_agent = CompiledSubAgent(
     name="retriever agent",
@@ -78,13 +59,10 @@ backend = CompositeBackend(
     routes={
         "/memories/":StoreBackend(namespace= lambda _rt: ("use_one",),store=store),
         "/files/": FilesystemBackend(root_dir='./files/',virtual_mode=True),
-        "/skills/": FilesystemBackend(root_dir='./skills/',virtual_mode=True)
+        "/memories/": FilesystemBackend(root_dir='./memories/',virtual_mode=True)
     }
 )
 
-#  seed
-if backend.download_files([MEMORY_FILE])[0].error == "file_not_found":
-    backend.upload_files([(MEMORY_FILE, b"# User Memory\n\n(nothing recorded yet)\n")])
 
 def create_graph():
     # NOTE: a checkpointer IS used here, so every graph call must supply a
@@ -94,8 +72,7 @@ def create_graph():
     return create_deep_agent(
         # model="openai:gpt-4.1-mini",
         model=model,
-        system_prompt="""Use retriever_agent subagent to answer questions about the loaded document.
-        Persist durable facts about the user to {MEMORY_FILE}.""",
+        system_prompt="You are a friendly assistant.",
         tools=[get_weather],
         checkpointer=memory,
         store=store,

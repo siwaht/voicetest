@@ -15,7 +15,7 @@ Production voice deployments built on this architecture are covered by confident
 - **Real-time voice conversation.** Audio in, audio out, over a LiveKit room. Speech is transcribed, reasoned about, and the reply is synthesized back to speech.
 - **A "deep agent" brain, not just a chat model.** The core LLM is wrapped with `deepagents.create_deep_agent`, which gives it planning/todo tools, a virtual filesystem, persistent memory, and the ability to delegate to subagents — on top of whatever custom tools it's given.
 - **Document-grounded Q&A (RAG).** A dedicated `retriever agent` subagent answers questions about a loaded document by searching an in-memory vector store (built in `raga.py` from `files/office.txt`) and only responds using passages it actually retrieved, instead of guessing.
-- **Tool use.** A `get_weather` tool is wired in (currently a mocked/canned response) to demonstrate how tools plug into the agent.
+- **Tool use.** `get_weather` (in `tools/get_weather.py`) is the only custom tool on the main agent; it returns a canned, hardcoded response and exists to show how a tool plugs in. The retriever subagent carries its own tool, `search_document`, defined in `raga.py`. Both sit on top of the planning, filesystem and skill tools DeepAgents supplies automatically.
 - **A deliberate connectivity check, not a test suite.** Asking the agent to "run a smoke test" triggers `skills/smoke-test/SKILL.md`. By design it calls no tools and makes no external requests: the skill instructs the model to pick pass or fail at random and reply with one of two fixed strings. Its only purpose is to confirm the loop is wired up — that the skill was discovered and loaded from the virtual filesystem, and that a reply makes it back through TTS. Hearing "smoke test successful, hurray" proves the plumbing, and nothing about the agent's answers.
 - **Memory.** Conversation state is checkpointed per session (LangGraph `InMemorySaver`), and a separate long-term memory store is routed to a virtual `/memories/AGENTS.md` file.
 - **Virtual filesystem backend.** `files/` and `skills/` are mounted into the agent's own virtual filesystem (via `CompositeBackend`/`FilesystemBackend`), with write access explicitly denied on `/skills/**` so the agent can read but not modify its own skill definitions.
@@ -44,7 +44,7 @@ ElevenLabs TTS (text → speech)  ──►  Caller audio
 
 `agent.py` is the main entrypoint. It builds the DeepAgents graph (`create_graph`), wires it into a LiveKit `AgentSession` as the LLM (via `livekit.plugins.langchain.LLMAdapter`), and streams only assistant-authored chunks back through TTS so tool calls and intermediate reasoning are never spoken aloud.
 
-`raga.py` builds the retriever used for RAG: it loads `files/office.txt`, splits it with `RecursiveCharacterTextSplitter` (chunk size 500, overlap 100), embeds the chunks with `OpenAIEmbeddings`, and indexes them in an `InMemoryVectorStore`. `tools/search_document.py` wraps that retriever as a LangChain tool, which the `retriever agent` subagent (defined in `agent.py`) uses to ground its answers.
+`raga.py` builds the retriever used for RAG: it loads `files/office.txt`, splits it with `RecursiveCharacterTextSplitter` (chunk size 500, overlap 100), embeds the chunks with `OpenAIEmbeddings`, and indexes them in an `InMemoryVectorStore`. It also defines the `search_document` tool that wraps that retriever, and builds `sub_agent_retriever` around it. `agent.py` then wraps that as the `retriever agent` `CompiledSubAgent`, which is how the deep agent delegates document questions to it.
 
 `testagent.py` is a second, simpler LiveKit entrypoint (`gpt-4.1-mini`, Inworld TTS) kept as a lighter experimental/reference agent alongside the main one.
 
@@ -87,8 +87,7 @@ voicetest/
 ├── main.py                  # Intentionally empty — not part of the runtime; the entrypoints are agent.py and testagent.py
 ├── demo.ipynb                # Notebook prototype of the agent pipeline
 ├── tools/
-│   ├── get_weather.py        # Example/mock tool
-│   └── search_document.py    # RAG tool used by the retriever subagent
+│   └── get_weather.py        # Custom tool: canned weather response (mock)
 ├── skills/
 │   └── smoke-test/SKILL.md    # Connectivity sanity-check skill (no tools, no external calls)
 ├── files/
