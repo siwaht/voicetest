@@ -174,7 +174,14 @@ class DeepAgentVoice(Agent):
             )
 
 
-server = AgentServer()
+# The agent dials out to LiveKit over a WebSocket and never serves inbound
+# traffic, but Render runs this as a *web* service: it assigns a port via $PORT
+# and fails the deploy if nothing listens on it. AgentServer's built-in health
+# check endpoint is the only HTTP surface the agent has, so bind it to $PORT
+# when the platform provides one. Locally, where $PORT is unset, keep the
+# framework defaults (8081 in production mode, a random free port under `dev`).
+_port = os.getenv("PORT")
+server = AgentServer(host="0.0.0.0", port=int(_port)) if _port else AgentServer()
 
 
 def prewarm(proc: JobProcess):
