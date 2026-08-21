@@ -199,11 +199,11 @@ async def entrypoint(ctx: JobContext):
     agent = DeepAgentVoice(graph=graph, config=config)
 
     session = AgentSession(
-        stt=inference.STT("deepgram/nova-3", language="multi"),
+        stt=inference.STT("deepgram/flux-general-multi"),
 
         llm=langchain.LLMAdapter(graph=graph, config=config),
 
-        tts=inference.TTS("elevenlabs/eleven_turbo_v2_5"),
+        tts=inference.TTS("elevenlabs/eleven_flash_v2_5"),
 
         vad=ctx.proc.userdata["vad"],
         expressive=True
