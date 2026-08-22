@@ -159,6 +159,13 @@ def _pending_input(chat_ctx):
         elif msg.role in ("system", "developer"):
             # Per-turn instructions, e.g. from session.generate_reply(instructions=...).
             # The agent's standing persona lives in the graph's own system_prompt.
+            #
+            # CAUTION: the deep agent treats an inbound SystemMessage as content to
+            # respond to, not as a directive, so anything routed through here can be
+            # spoken aloud verbatim or paraphrased. That is exactly what happened to
+            # the old greeting. Prefer session.say() for fixed lines, and only use
+            # generate_reply(instructions=...) if you have confirmed the wording is
+            # safe to be overheard by the caller.
             pending.append(SystemMessage(content=content, id=msg.id))
     pending.reverse()
     return {"messages": pending}
@@ -264,7 +271,18 @@ async def entrypoint(ctx: JobContext):
     )
 
     await session.start(agent=agent, room=ctx.room)
-    await session.generate_reply(instructions="Ask the user how they're doing.")
+
+    # A fixed greeting, not generate_reply(instructions=...). Both reasons were
+    # observed in a real session transcript in LiveKit's agent insights:
+    #   1. Feeding the instructions through the deep agent made it paraphrase them
+    #      out loud. It greeted with "really amiable and welcoming Hey, how are
+    #      you doing today?", speaking its own directive back to the caller.
+    #   2. That path measured 6.9s time-to-first-token. On a phone call that is
+    #      long enough that the caller assumes the line is dead.
+    # say() bypasses the LLM, so the first words arrive as fast as TTS can render
+    # them. add_to_chat_ctx defaults to True, so this still lands in the chat
+    # context as the assistant turn that _pending_input treats as its boundary.
+    await session.say("Hi, thanks for calling. How can I help you today?")
 
 
 if __name__ == "__main__":
