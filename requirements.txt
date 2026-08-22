@@ -9,4 +9,6 @@ langchain-quickjs
 # agent.py imports `livekit.agents` plus the langchain and silero plugins.
 # Without these the process crashes on import with ModuleNotFoundError.
 # The extras pull in livekit-plugins-langchain and livekit-plugins-silero.
-livekit-agents[langchain,silero]>=1.7.0
+# turn-detector is required by `expressive=True` on the AgentSession and must
+# match the extras in pyproject.toml, since a deploy may build from either file.
+livekit-agents[langchain,silero,turn-detector]>=1.7.0
